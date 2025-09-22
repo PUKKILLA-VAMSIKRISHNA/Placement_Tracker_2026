@@ -2,38 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index.py",
+      "src": "vercel_app.py",
       "use": "@vercel/python"
-    },
-    {
-      "src": "static/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "templates/**",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/templates/(.*)",
-      "dest": "/templates/$1"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/api"
+      "dest": "vercel_app.py"
     }
-  ],
-  "env": {
-    "PYTHONPATH": "/var/task:/var/task/package"
-  },
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 10
-    }
-  }
+  ]
 }
