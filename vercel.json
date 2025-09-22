@@ -27,5 +27,13 @@
       "src": "/(.*)",
       "dest": "/api"
     }
-  ]
+  ],
+  "env": {
+    "PYTHONPATH": "/var/task:/var/task/package"
+  },
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 10
+    }
+  }
 }

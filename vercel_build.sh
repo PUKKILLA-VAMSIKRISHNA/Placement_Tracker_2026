@@ -19,3 +19,17 @@ echo "FLASK_SECRET_KEY=$FLASK_SECRET_KEY" >> .env
 echo "FLASK_ENV=production" >> .env
 echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
 echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> .env
+
+# Create __init__.py in the api directory if it doesn't exist
+if [ ! -f "api/__init__.py" ]; then
+    touch api/__init__.py
+fi
+
+# Create a simple test file to verify the build
+cat > test_vercel.py << 'EOF'
+import os
+print("Python version:", os.sys.version)
+print("Current directory:", os.getcwd())
+print("Files in current directory:", os.listdir('.'))
+print("Files in api directory:", os.listdir('api') if os.path.exists('api') else 'No api directory')
+EOF
