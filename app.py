@@ -282,10 +282,12 @@ def developers():
 # This allows gunicorn to find the app
 app = app
 
-# For Vercel deployment
+# For local development
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true')
 
 # For Vercel serverless functions
-handler = app
+def vercel_handler(event, context):
+    from api.index import handler as vercel_handler
+    return vercel_handler(event, context)
