@@ -16,24 +16,21 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key')
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY')
 
-# Validate required environment variables
-if not all([SUPABASE_URL, SUPABASE_KEY]):
-    raise ValueError("Missing required environment variables. Please check your .env file.")
-
 # Initialize Supabase client
-try:
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    # Test the connection
-    supabase.table('companies').select('*').limit(1).execute()
-except Exception as e:
-    print(f"Error initializing Supabase client: {str(e)}")
-    print(f"Supabase URL: {SUPABASE_URL}")
-    print(f"Supabase Key: {SUPABASE_KEY[:10]}...{SUPABASE_KEY[-10:] if SUPABASE_KEY else ''}")
-    raise
+supabase = None
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        print(f"Error initializing Supabase client: {str(e)}")
+        supabase = None
 
 @app.route('/')
 def index():
     """Main page displaying all companies as cards"""
+    if not supabase:
+        return render_template('index.html', companies=[])
+    
     try:
         # Fetch all companies from Supabase
         response = supabase.table('companies').select('*').execute()
