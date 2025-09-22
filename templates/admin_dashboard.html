@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - IT Branch 2026 Placements{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-5">
+                <i class="fas fa-tachometer-alt me-3"></i>
+                Admin Dashboard
+            </h1>
+            <div class="text-muted">
+                Welcome, {{ session.admin_email }}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-md-6 col-lg-3 mb-3">
+                <a href="{{ url_for('add_company') }}" class="btn btn-success w-100 p-3">
+                    <i class="fas fa-plus-circle fa-2x d-block mb-2"></i>
+                    <strong>Add Company</strong>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3 mb-3">
+                <a href="{{ url_for('index') }}" class="btn btn-info w-100 p-3">
+                    <i class="fas fa-eye fa-2x d-block mb-2"></i>
+                    <strong>View Public Site</strong>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="btn btn-secondary w-100 p-3 disabled">
+                    <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
+                    <strong>Reports</strong>
+                    <small class="d-block">Coming Soon</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 mb-3">
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger w-100 p-3">
+                    <i class="fas fa-sign-out-alt fa-2x d-block mb-2"></i>
+                    <strong>Logout</strong>
+                </a>
+            </div>
+        </div>
+
+        <!-- Companies Management -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-building me-2"></i>
+                    Manage Companies
+                </h4>
+                <span class="badge bg-primary rounded-pill">{{ companies|length }} companies</span>
+            </div>
+            <div class="card-body">
+                {% if companies %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">Company Name</th>
+                                    <th scope="col">CTC Offer</th>
+                                    <th scope="col">Agreement Years</th>
+                                    <th scope="col">Students</th>
+                                    <th scope="col">Created</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for company in companies %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-building text-primary me-2"></i>
+                                            <strong>{{ company.name }}</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-success fw-bold">{{ company.ctc_offer }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ company.agreement_years }} years</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('company_details', company_id=company.id) }}" 
+                                           class="text-decoration-none">
+                                            <i class="fas fa-users me-1"></i>
+                                            View Students
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ company.created_at[:10] if company.created_at else 'N/A' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('company_details', company_id=company.id) }}" 
+                                               class="btn btn-outline-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('edit_company', company_id=company.id) }}" 
+                                               class="btn btn-outline-warning" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('add_student', company_id=company.id) }}" 
+                                               class="btn btn-outline-success" title="Add Student">
+                                                <i class="fas fa-user-plus"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger" 
+                                                    onclick="deleteCompany('{{ company.id }}', '{{ company.name }}')"
+                                                    title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-building fa-5x text-muted"></i>
+                        </div>
+                        <h5 class="text-muted">No Companies Added Yet</h5>
+                        <p class="text-muted">Start by adding your first company to the placement tracker.</p>
+                        <a href="{{ url_for('add_company') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            Add First Company
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Company Modal -->
+<div class="modal fade" id="deleteCompanyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This will also delete all associated student records.
+                </div>
+                <p>Are you sure you want to delete <strong id="companyNameToDelete"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteCompanyForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete Company</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteCompany(companyId, companyName) {
+    document.getElementById('companyNameToDelete').textContent = companyName;
+    document.getElementById('deleteCompanyForm').action = `/admin/delete_company/${companyId}`;
+    new bootstrap.Modal(document.getElementById('deleteCompanyModal')).show();
+}
+</script>
+{% endblock %}

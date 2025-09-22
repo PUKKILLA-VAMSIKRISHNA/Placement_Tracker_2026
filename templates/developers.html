@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Developers - IT Branch 2026 Placements{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4">
+            <i class="fas fa-code me-3"></i>
+            Meet Our Team
+        </h1>
+        <p class="lead text-muted">The brilliant minds behind the Placement Tracker</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <!-- Developer 1 -->
+        <div class="col-md-5 mb-4">
+            <div class="card developer-card h-100 shadow">
+                <div class="developer-image-container">
+                    <img src="{{ url_for('static', filename='img/Developer1.jpg') }}" alt="Vamsi Krishna" class="developer-image">
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com/in/pukkilla-vamsikrishna-7772741aa" target="_blank" class="social-link linkedin">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="https://github.com/PUKKILLA-VAMSIKRISHNA" target="_blank" class="social-link github">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body text-center">
+                    <h3 class="card-title">Pukkilla VamsiKrishna</h3>
+                    <h6 class="text-primary mb-3">Full Stack Developer</h6>
+                    <p class="card-text">Passionate about creating seamless web experiences and solving complex problems with clean code.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Developer 2 -->
+        <div class="col-md-5 mb-4">
+            <div class="card developer-card h-100 shadow">
+                <div class="developer-image-container">
+                    <img src="{{ url_for('static', filename='img/Developer2.jpg') }}" alt="Bhargav Ram" class="developer-image">
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com/in/bhargavram-paila/" target="_blank" class="social-link linkedin">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="https://github.com/pailabhargavram0207" target="_blank" class="social-link github">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body text-center">
+                    <h3 class="card-title">Bhargav Ram Paila</h3>
+                    <h6 class="text-primary mb-3">UI/UX Designer & Innovation Specialist</h6>
+                    <p class="card-text">Designing beautiful interfaces and crafting delightful user experiences is my passion.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.developer-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.developer-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.developer-image-container {
+    position: relative;
+    height: 300px;
+    overflow: hidden;
+}
+
+.developer-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.developer-card:hover .developer-image {
+    transform: scale(1.05);
+}
+
+.social-links {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.developer-card:hover .social-links {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: white;
+    font-size: 18px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.social-link.linkedin { background-color: #0A66C2; }
+.social-link.github { background-color: #333; }
+
+.social-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.card-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.text-primary {
+    color: #4e73df !important;
+}
+</style>
+{% endblock %}

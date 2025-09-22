@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Companies - IT Branch 2026 Placements{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="display-4">
+                <i class="fas fa-building me-3"></i>
+                Placement Companies
+            </h1>
+            <div class="welcome-message">
+                <i class="fas fa-laptop-code me-2"></i>
+                <span id="greeting">Hello, IT Department!</span>
+            </div>
+        </div>
+        
+        {% if companies %}
+            <div class="row">
+                {% for company in companies %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card company-card h-100 shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-building me-2"></i>
+                                    {{ company.name }}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <h6 class="text-muted">
+                                        <i class="fas fa-route me-2"></i>
+                                        Hiring Flow
+                                    </h6>
+                                    <p class="card-text">{{ company.hiring_flow }}</p>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <h6 class="text-muted">
+                                            <i class="fas fa-money-bill-wave me-2"></i>
+                                            CTC Offer
+                                        </h6>
+                                        <p class="card-text fw-bold text-success">{{ company.ctc_offer }}</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <h6 class="text-muted">
+                                            <i class="fas fa-calendar-check me-2"></i>
+                                            Agreement
+                                        </h6>
+                                        <p class="card-text">{{ company.agreement_years }} years</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-light">
+                                <a href="{{ url_for('company_details', company_id=company.id) }}" 
+                                   class="btn btn-primary w-100">
+                                    <i class="fas fa-users me-2"></i>
+                                    View Selected Students
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-building fa-5x text-muted"></i>
+                </div>
+                <h3 class="text-muted">No Companies Added Yet</h3>
+                <p class="text-muted">Companies will appear here once they are added by the admin.</p>
+                {% if session.get('admin_logged_in') %}
+                    <a href="{{ url_for('add_company') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        Add First Company
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statistics Section -->
+{% if companies %}
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Quick Statistics
+                </h5>
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <h3 class="text-primary">{{ companies|length }}</h3>
+                            <p class="text-muted">Total Companies</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <h3 class="text-success">Active</h3>
+                            <p class="text-muted">Recruitment Status</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <h3 class="text-info">2026</h3>
+                            <p class="text-muted">Batch Year</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <h3 class="text-warning">IT</h3>
+                            <p class="text-muted">Branch</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

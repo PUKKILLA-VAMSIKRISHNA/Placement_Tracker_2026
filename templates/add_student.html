@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Add Student to {{ company_name }} - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Add Student to {{ company_name }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">
+                            <i class="fas fa-user me-2"></i>
+                            Student Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="Enter student's full name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="student_number" class="form-label">
+                            <i class="fas fa-id-card me-2"></i>
+                            Student Roll Number <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="student_number" name="student_number" 
+                               placeholder="e.g., 2026IT001" required>
+                        <div class="form-text">Student roll number or registration number</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="linkedin_id" class="form-label">
+                            <i class="fab fa-linkedin me-2"></i>
+                            LinkedIn ID
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">linkedin.com/in/</span>
+                            <input type="text" class="form-control" id="linkedin_id" name="linkedin_id" 
+                                   placeholder="username">
+                        </div>
+                        <div class="form-text">Optional: LinkedIn profile username (without the full URL)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max_round_reached" class="form-label">
+                            <i class="fas fa-trophy me-2"></i>
+                            Maximum Round Reached <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="max_round_reached" name="max_round_reached" required>
+                            <option value="">Select round</option>
+                            <option value="1">Round 1 - Online Test/Aptitude</option>
+                            <option value="2">Round 2 - Technical Interview</option>
+                            <option value="3">Round 3 - HR Interview</option>
+                            <option value="4">Round 4 - Final Selection</option>
+                            <option value="5">Round 5 - Got Offer</option>
+                            <option value="5">Others</option>
+                        </select>
+                        <div class="form-text">Highest round the student has cleared or reached</div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>
+                            Add Student
+                        </button>
+                        <a href="{{ url_for('company_details', company_id=company_id) }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Help Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Tips for Adding Students
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>Student Name:</strong> Use the full name as per college records</li>
+                    <li><strong>Student Number:</strong> Use the official roll number or registration number</li>
+                    <li><strong>LinkedIn ID:</strong> Only the username part (e.g., "john-doe-123")</li>
+                    <li><strong>Round Reached:</strong> Select the highest round completed or currently in progress</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
