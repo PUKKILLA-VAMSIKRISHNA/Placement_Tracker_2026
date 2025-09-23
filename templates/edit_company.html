@@ -28,7 +28,7 @@
                             <i class="fas fa-route me-2"></i>
                             Hiring Flow <span class="text-danger">*</span>
                         </label>
-                        <textarea class="form-control" id="hiring_flow" name="hiring_flow" rows="4" required>{{ company.hiring_flow }}</textarea>
+                        <textarea class="form-control" id="hiring_flow" name="hiring_flow" rows="4" required>{{ company.hiring_rounds.replace(',', ' → ') }}</textarea>
                         <div class="form-text">Describe the complete hiring process step by step</div>
                     </div>
                     

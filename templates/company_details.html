@@ -28,7 +28,37 @@
                             <i class="fas fa-route me-2"></i>
                             Hiring Flow
                         </h5>
-                        <p class="mb-3">{{ company.hiring_flow }}</p>
+                        <div class="mb-3">
+                            <div class="hiring-flow-vertical">
+                                {% for round in company.hiring_rounds.split(',') %}
+                                    {% set colors = ['bg-success', 'bg-info', 'bg-warning', 'bg-danger', 'bg-primary', 'bg-secondary'] %}
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="round-box {{ colors[loop.index0 % colors|length] }} text-white fw-bold shadow-sm" style="border-radius: 25px; padding: 0.8em 1.8em; font-size: 1em; min-width: 250px; text-align: center;">
+                                            <i class="fas fa-{{ loop.index }} me-2"></i>{{ round.strip() }}
+                                        </span>
+                                    </div>
+                                    {% if not loop.last %}
+                                        <div class="text-center mb-2">
+                                            <i class="fas fa-arrow-down" style="color: #6c757d; font-size: 1.5em;"></i>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                                <style>
+                                    .round-box {
+                                        transition: all 0.3s ease;
+                                        border: 2px solid transparent;
+                                    }
+                                    .round-box:hover {
+                                        transform: translateY(-3px);
+                                        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+                                        border-color: rgba(255,255,255,0.4);
+                                    }
+                                    .hiring-flow-vertical {
+                                        max-width: 300px;
+                                    }
+                                </style>
+                            </div>
+                        </div>
                         
                         <h5 class="text-muted">
                             <i class="fas fa-money-bill-wave me-2"></i>
@@ -127,6 +157,9 @@
                                     {% if session.get('admin_logged_in') %}
                                     <td>
                                         <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('edit_student', student_id=student.id) }}" class="btn btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
                                             <button class="btn btn-outline-danger" 
                                                     onclick="deleteStudent('{{ student.id }}', '{{ student.name }}')">
                                                 <i class="fas fa-trash"></i>
@@ -182,13 +215,14 @@
 </div>
 {% endif %}
 
-<script>
 {% if session.get('admin_logged_in') %}
+<script>
 function deleteStudent(studentId, studentName) {
     document.getElementById('studentNameToDelete').textContent = studentName;
-    document.getElementById('deleteStudentForm').action = `/admin/delete_student/${studentId}`;
-    new bootstrap.Modal(document.getElementById('deleteStudentModal')).show();
+    document.getElementById('deleteStudentForm').action = '/admin/delete_student/' + studentId;
+    var modal = new bootstrap.Modal(document.getElementById('deleteStudentModal'));
+    modal.show();
 }
-{% endif %}
 </script>
+{% endif %}
 {% endblock %}

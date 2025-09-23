@@ -24,14 +24,37 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="hiring_flow" class="form-label">
+                        <label class="form-label">
                             <i class="fas fa-route me-2"></i>
-                            Hiring Flow <span class="text-danger">*</span>
+                            Hiring Rounds <span class="text-danger">*</span>
                         </label>
-                        <textarea class="form-control" id="hiring_flow" name="hiring_flow" rows="4" 
-                                  placeholder="Describe the hiring process (e.g., Online Test → Technical Interview → HR Interview → Final Selection)" required></textarea>
-                        <div class="form-text">Describe the complete hiring process step by step</div>
+                        <div id="rounds-container">
+                            <div class="input-group mb-2 round-field">
+                                <input type="text" class="form-control" name="hiring_rounds" placeholder="e.g., Online Test" required>
+                                <button type="button" class="btn btn-outline-danger remove-round" onclick="removeRound(this)"><i class="fas fa-minus"></i></button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary" onclick="addRound()">
+                            <i class="fas fa-plus me-1"></i> Add Another Round
+                        </button>
+                        <div class="form-text">Add each round of the hiring process separately</div>
                     </div>
+                    <script>
+                        function addRound() {
+                            const container = document.getElementById('rounds-container');
+                            const div = document.createElement('div');
+                            div.className = 'input-group mb-2 round-field';
+                            div.innerHTML = `<input type="text" class="form-control" name="hiring_rounds" placeholder="e.g., Technical Interview" required>
+                                <button type="button" class="btn btn-outline-danger remove-round" onclick="removeRound(this)"><i class="fas fa-minus"></i></button>`;
+                            container.appendChild(div);
+                        }
+                        function removeRound(btn) {
+                            const field = btn.closest('.round-field');
+                            if (document.querySelectorAll('.round-field').length > 1) {
+                                field.remove();
+                            }
+                        }
+                    </script>
                     
                     <div class="row">
                         <div class="col-md-6">
@@ -53,16 +76,16 @@
                                 </label>
                                 <select class="form-select" id="agreement_years" name="agreement_years" required>
                                     <option value="">Select years</option>
-                                    <option value="1">0 year</option>
+                                    <option value="0">0 year</option>
                                     <option value="1">1 year</option>
-                                    <option value="2">1.5 Years</option>
-                                    <option value="3">2 Years</option>
-                                    <option value="4">2.5 Years</option>
-                                    <option value="5">3 Years</option>
-                                    <option value="6">3.5 Years</option>
-                                    <option value="7">4 Years</option>
-                                    <option value="8">4.5 Years</option>
-                                    <option value="9">5 Years</option>
+                                    <option value="1.5">1.5 Years</option>
+                                    <option value="2">2 Years</option>
+                                    <option value="2.5">2.5 Years</option>
+                                    <option value="3">3 Years</option>
+                                    <option value="3.5">3.5 Years</option>
+                                    <option value="4">4 Years</option>
+                                    <option value="4.5">4.5 Years</option>
+                                    <option value="5">5 Years</option>
                                 </select>
                                 <div class="form-text">Bond/agreement period</div>
                             </div>

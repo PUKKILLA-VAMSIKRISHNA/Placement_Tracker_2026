@@ -142,9 +142,13 @@ def add_company():
     
     if request.method == 'POST':
         try:
+            # Get hiring rounds as a comma-separated string from the form (step-wise input will be handled in the form later)
+            # Collect all hiring_rounds fields and join into a comma-separated string
+            rounds_list = request.form.getlist('hiring_rounds')
+            hiring_rounds = ','.join([r.strip() for r in rounds_list if r.strip()])
             company_data = {
                 'name': request.form.get('name'),
-                'hiring_flow': request.form.get('hiring_flow'),
+                'hiring_rounds': hiring_rounds,
                 'ctc_offer': request.form.get('ctc_offer'),
                 'agreement_years': int(request.form.get('agreement_years')),
                 'created_at': datetime.now().isoformat()
@@ -166,9 +170,12 @@ def edit_company(company_id):
     
     if request.method == 'POST':
         try:
+            # Get hiring rounds as a comma-separated string from the form (step-wise input will be handled in the form later)
+            rounds_list = request.form.getlist('hiring_rounds')
+            hiring_rounds = ','.join([r.strip() for r in rounds_list if r.strip()])
             company_data = {
                 'name': request.form.get('name'),
-                'hiring_flow': request.form.get('hiring_flow'),
+                'hiring_rounds': hiring_rounds,
                 'ctc_offer': request.form.get('ctc_offer'),
                 'agreement_years': int(request.form.get('agreement_years')),
                 'updated_at': datetime.now().isoformat()
@@ -234,10 +241,16 @@ def add_student(company_id):
             flash(f'Error adding student: {str(e)}', 'error')
     
     try:
-        # Get company name for context
-        company_response = supabase.table('companies').select('name').eq('id', company_id).execute()
-        company_name = company_response.data[0]['name'] if company_response.data else 'Unknown'
-        return render_template('add_student.html', company_id=company_id, company_name=company_name)
+        # Get company name and rounds for context
+        company_response = supabase.table('companies').select('name, hiring_rounds').eq('id', company_id).execute()
+        if company_response.data:
+            company_name = company_response.data[0]['name']
+            hiring_rounds_str = company_response.data[0].get('hiring_rounds', '')
+            company_rounds = [r.strip() for r in hiring_rounds_str.split(',') if r.strip()]
+        else:
+            company_name = 'Unknown'
+            company_rounds = []
+        return render_template('add_student.html', company_id=company_id, company_name=company_name, company_rounds=company_rounds)
     except Exception as e:
         flash(f'Error loading form: {str(e)}', 'error')
         return redirect(url_for('admin_dashboard'))
@@ -275,6 +288,47 @@ def admin_logout():
 def developers():
     """Display the developers page."""
     return render_template('developers.html')
+
+@app.route('/admin/edit_student/<student_id>', methods=['GET', 'POST'])
+def edit_student(student_id):
+    """Edit student details"""
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    # Fetch student info
+    student_response = supabase.table('selected_students').select('*').eq('id', student_id).execute()
+    if not student_response.data:
+        flash('Student not found', 'error')
+        return redirect(url_for('admin_dashboard'))
+    student = student_response.data[0]
+
+    # Fetch company info for rounds
+    company_id = student['company_id']
+    company_response = supabase.table('companies').select('name, hiring_rounds').eq('id', company_id).execute()
+    if company_response.data:
+        company_name = company_response.data[0]['name']
+        hiring_rounds_str = company_response.data[0].get('hiring_rounds', '')
+        company_rounds = [r.strip() for r in hiring_rounds_str.split(',') if r.strip()]
+    else:
+        company_name = 'Unknown'
+        company_rounds = []
+
+    if request.method == 'POST':
+        try:
+            update_data = {
+                'name': request.form.get('name'),
+                'student_number': request.form.get('student_number'),
+                'linkedin_id': request.form.get('linkedin_id'),
+                'max_round_reached': request.form.get('max_round_reached'),
+                'updated_at': datetime.now().isoformat()
+            }
+            supabase.table('selected_students').update(update_data).eq('id', student_id).execute()
+            flash('Student updated successfully!', 'success')
+            return redirect(url_for('company_details', company_id=company_id))
+        except Exception as e:
+            flash(f'Error updating student: {str(e)}', 'error')
+
+    return render_template('edit_student.html', student=student, company_id=company_id, company_name=company_name, company_rounds=company_rounds)
 
 # For Vercel deployment
 if __name__ == '__main__':

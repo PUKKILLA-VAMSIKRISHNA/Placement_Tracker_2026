@@ -33,7 +33,38 @@
                                         <i class="fas fa-route me-2"></i>
                                         Hiring Flow
                                     </h6>
-                                    <p class="card-text">{{ company.hiring_flow }}</p>
+                                    <div class="hiring-flow-vertical d-flex flex-column align-items-center">
+                                        {% for round in company.hiring_rounds.split(',') %}
+                                            {% set colors = ['bg-success', 'bg-info', 'bg-warning', 'bg-danger', 'bg-primary', 'bg-secondary'] %}
+                                            <div class="d-flex justify-content-center mb-2">
+                                                <span class="round-box {{ colors[loop.index0 % colors|length] }} text-white fw-bold shadow-sm" style="border-radius: 25px; padding: 0.7em 1.5em; font-size: 0.9em; min-width: 200px; text-align: center;">
+                                                    <i class="fas fa-{{ loop.index }} me-2"></i>{{ round.strip() }}
+                                                </span>
+                                            </div>
+                                            {% if not loop.last %}
+                                                <div class="text-center mb-2">
+                                                    <i class="fas fa-arrow-down" style="color: #6c757d; font-size: 1.2em;"></i>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <style>
+                                            .round-box {
+                                                transition: all 0.3s ease;
+                                                border: 2px solid transparent;
+                                            }
+                                            .round-box:hover {
+                                                transform: translateY(-2px);
+                                                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                                                border-color: rgba(255,255,255,0.3);
+                                            }
+                                            .hiring-flow-vertical {
+                                                width: 100%;
+                                                display: flex;
+                                                flex-direction: column;
+                                                align-items: center;
+                                            }
+                                        </style>
+                                    </div>
                                 </div>
                                 
                                 <div class="row mb-3">
