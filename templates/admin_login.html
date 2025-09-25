@@ -4,13 +4,14 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow">
+    <div class="col-11 col-sm-8 col-md-6 col-lg-4">
+        <div class="card shadow mobile-login-card">
             <div class="card-header bg-primary text-white text-center">
-                <h4 class="mb-0">
+                <h5 class="h4 mb-0">
                     <i class="fas fa-user-shield me-2"></i>
-                    Admin Login
-                </h4>
+                    <span class="d-none d-sm-inline">Admin Login</span>
+                    <span class="d-sm-none">Login</span>
+                </h5>
             </div>
             <div class="card-body p-4">
                 <form method="POST" action="{{ url_for('admin_authenticate') }}">
@@ -52,7 +53,8 @@
         <div class="text-center mt-3">
             <a href="{{ url_for('index') }}" class="text-decoration-none">
                 <i class="fas fa-arrow-left me-2"></i>
-                Back to Companies
+                <span class="d-none d-sm-inline">Back to Companies</span>
+                <span class="d-sm-none">Back</span>
             </a>
         </div>
     </div>
@@ -60,8 +62,8 @@
 
 <!-- Demo Credentials Info (Remove in production) -->
 <div class="row justify-content-center mt-4">
-    <div class="col-md-6 col-lg-4">
-        <div class="alert alert-info">
+    <div class="col-11 col-sm-8 col-md-6 col-lg-4">
+        <div class="alert alert-info mobile-alert">
             <h6><i class="fas fa-info-circle me-2"></i>Demo Credentials</h6>
             <p class="mb-1"><strong>Email:</strong> admin@placement.com</p>
             <p class="mb-0"><strong>Password:</strong> admin123</p>
@@ -69,4 +71,39 @@
         </div>
     </div>
 </div>
+
+<style>
+    .mobile-login-card {
+        border-radius: 15px;
+        border: none;
+    }
+    
+    .mobile-alert {
+        border-radius: 12px;
+    }
+    
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 1.5rem !important;
+        }
+        
+        .form-control {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+        
+        .mobile-alert {
+            font-size: 0.9rem;
+        }
+        
+        .mobile-alert h6 {
+            font-size: 1rem;
+        }
+    }
+</style>
 {% endblock %}

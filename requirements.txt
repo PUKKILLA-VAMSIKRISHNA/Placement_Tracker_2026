@@ -1,4 +1,9 @@
-Flask==2.3.3
-supabase==1.0.4
-python-dotenv==1.0.0
-Werkzeug==2.3.7
+Flask
+supabase
+python-dotenv
+Werkzeug
+pandas
+xlsxwriter
+reportlab
+openpyxl
+Pillow

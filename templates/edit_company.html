@@ -24,13 +24,49 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="hiring_flow" class="form-label">
-                            <i class="fas fa-route me-2"></i>
-                            Hiring Flow <span class="text-danger">*</span>
+                        <label for="logo_url" class="form-label">
+                            <i class="fas fa-image me-2"></i>
+                            Company Logo URL
                         </label>
-                        <textarea class="form-control" id="hiring_flow" name="hiring_flow" rows="4" required>{{ company.hiring_rounds.replace(',', ' → ') }}</textarea>
-                        <div class="form-text">Describe the complete hiring process step by step</div>
+                        <input type="url" class="form-control" id="logo_url" name="logo_url" 
+                               value="{{ company.logo_url or '' }}" placeholder="https://example.com/logo.png">
+                        <div class="form-text">Optional: URL to the company logo image</div>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-route me-2"></i>
+                            Hiring Rounds <span class="text-danger">*</span>
+                        </label>
+                        <div id="rounds-container">
+                            {% for round in company.hiring_rounds.split(',') %}
+                            <div class="input-group mb-2 round-field">
+                                <input type="text" class="form-control" name="hiring_rounds" value="{{ round.strip() }}" required>
+                                <button type="button" class="btn btn-outline-danger remove-round" onclick="removeRound(this)"><i class="fas fa-minus"></i></button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="btn btn-outline-primary" onclick="addRound()">
+                            <i class="fas fa-plus me-1"></i> Add Another Round
+                        </button>
+                        <div class="form-text">Edit each round of the hiring process separately</div>
+                    </div>
+                    <script>
+                        function addRound() {
+                            const container = document.getElementById('rounds-container');
+                            const div = document.createElement('div');
+                            div.className = 'input-group mb-2 round-field';
+                            div.innerHTML = `<input type="text" class="form-control" name="hiring_rounds" placeholder="e.g., Technical Interview" required>
+                                <button type="button" class="btn btn-outline-danger remove-round" onclick="removeRound(this)"><i class="fas fa-minus"></i></button>`;
+                            container.appendChild(div);
+                        }
+                        function removeRound(btn) {
+                            const field = btn.closest('.round-field');
+                            if (document.querySelectorAll('.round-field').length > 1) {
+                                field.remove();
+                            }
+                        }
+                    </script>
                     
                     <div class="row">
                         <div class="col-md-6">
@@ -52,11 +88,16 @@
                                 </label>
                                 <select class="form-select" id="agreement_years" name="agreement_years" required>
                                     <option value="">Select years</option>
-                                    {% for year in range(1, 6) %}
-                                        <option value="{{ year }}" {% if company.agreement_years == year %}selected{% endif %}>
-                                            {{ year }} Year{{ 's' if year > 1 else '' }}
-                                        </option>
-                                    {% endfor %}
+                                    <option value="0" {% if company.agreement_years == 0 %}selected{% endif %}>0 year</option>
+                                    <option value="1" {% if company.agreement_years == 1 %}selected{% endif %}>1 year</option>
+                                    <option value="1.5" {% if company.agreement_years == 1.5 %}selected{% endif %}>1.5 Years</option>
+                                    <option value="2" {% if company.agreement_years == 2 %}selected{% endif %}>2 Years</option>
+                                    <option value="2.5" {% if company.agreement_years == 2.5 %}selected{% endif %}>2.5 Years</option>
+                                    <option value="3" {% if company.agreement_years == 3 %}selected{% endif %}>3 Years</option>
+                                    <option value="3.5" {% if company.agreement_years == 3.5 %}selected{% endif %}>3.5 Years</option>
+                                    <option value="4" {% if company.agreement_years == 4 %}selected{% endif %}>4 Years</option>
+                                    <option value="4.5" {% if company.agreement_years == 4.5 %}selected{% endif %}>4.5 Years</option>
+                                    <option value="5" {% if company.agreement_years == 5 %}selected{% endif %}>5 Years</option>
                                 </select>
                                 <div class="form-text">Bond/agreement period</div>
                             </div>

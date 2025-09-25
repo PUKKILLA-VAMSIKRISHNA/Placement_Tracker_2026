@@ -34,6 +34,16 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-2"></i>
+                            Email Address <span class="text-danger">*</span>
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               placeholder="student@example.com" required>
+                        <div class="form-text">Student's email address</div>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="linkedin_id" class="form-label">
                             <i class="fab fa-linkedin me-2"></i>
                             LinkedIn ID
@@ -54,10 +64,10 @@
                         <select class="form-select" id="max_round_reached" name="max_round_reached" required>
                             <option value="">Select round</option>
                             {% for round in company_rounds %}
-                                <option value="{{ loop.index }}">Round {{ loop.index }} - {{ round }}</option>
+                                <option value="Round {{ loop.index }}">Round {{ loop.index }} - {{ round }}</option>
                             {% endfor %}
-                            <option value="got_offer">Got Offer</option>
-                            <option value="others">Others</option>
+                            <option value="Got Offer">Got Offer</option>
+                            <option value="Others">Others</option>
                         </select>
                         <div class="form-text">Highest round the student has cleared or reached</div>
                     </div>
@@ -88,6 +98,7 @@
                 <ul class="mb-0">
                     <li><strong>Student Name:</strong> Use the full name as per college records</li>
                     <li><strong>Student Number:</strong> Use the official roll number or registration number</li>
+                    <li><strong>Email:</strong> Use the student's official or personal email address</li>
                     <li><strong>LinkedIn ID:</strong> Only the username part (e.g., "john-doe-123")</li>
                     <li><strong>Round Reached:</strong> Select the highest round completed or currently in progress</li>
                 </ul>

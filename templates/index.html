@@ -5,91 +5,64 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="display-4">
-                <i class="fas fa-building me-3"></i>
-                Placement Companies
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+            <h1 class="display-5 display-md-4 text-center text-md-start mb-3 mb-md-0">
+                <i class="fas fa-building me-2"></i>
+                <span class="d-none d-sm-inline">Placement Companies</span>
+                <span class="d-sm-none">Companies</span>
             </h1>
-            <div class="welcome-message">
+            <div class="welcome-message text-center text-md-end">
                 <i class="fas fa-laptop-code me-2"></i>
-                <span id="greeting">Hello, IT Department!</span>
+                <span id="greeting" class="d-none d-sm-inline">Hello, IT Department!</span>
+                <span id="greeting-mobile" class="d-sm-none">Hello, IT Dept!</span>
             </div>
         </div>
         
+        <!-- Search Bar -->
         {% if companies %}
-            <div class="row">
+        <div class="row mb-4">
+            <div class="col-12 col-md-8 col-lg-6 mx-auto">
+                <div class="input-group mobile-search">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="companySearch" placeholder="Search companies..." onkeyup="filterCompanies()">
+                    <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="form-text text-center mt-2">
+                    <span id="searchResults">Showing {{ companies|length }} companies</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if companies %}
+            <div class="row g-3 g-md-4" id="companiesContainer">
                 {% for company in companies %}
-                    <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="card company-card h-100 shadow-sm">
-                            <div class="card-header bg-primary text-white">
-                                <h5 class="card-title mb-0">
-                                    <i class="fas fa-building me-2"></i>
-                                    {{ company.name }}
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <h6 class="text-muted">
-                                        <i class="fas fa-route me-2"></i>
-                                        Hiring Flow
-                                    </h6>
-                                    <div class="hiring-flow-vertical d-flex flex-column align-items-center">
-                                        {% for round in company.hiring_rounds.split(',') %}
-                                            {% set colors = ['bg-success', 'bg-info', 'bg-warning', 'bg-danger', 'bg-primary', 'bg-secondary'] %}
-                                            <div class="d-flex justify-content-center mb-2">
-                                                <span class="round-box {{ colors[loop.index0 % colors|length] }} text-white fw-bold shadow-sm" style="border-radius: 25px; padding: 0.7em 1.5em; font-size: 0.9em; min-width: 200px; text-align: center;">
-                                                    <i class="fas fa-{{ loop.index }} me-2"></i>{{ round.strip() }}
-                                                </span>
-                                            </div>
-                                            {% if not loop.last %}
-                                                <div class="text-center mb-2">
-                                                    <i class="fas fa-arrow-down" style="color: #6c757d; font-size: 1.2em;"></i>
-                                                </div>
-                                            {% endif %}
-                                        {% endfor %}
-                                        <style>
-                                            .round-box {
-                                                transition: all 0.3s ease;
-                                                border: 2px solid transparent;
-                                            }
-                                            .round-box:hover {
-                                                transform: translateY(-2px);
-                                                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                                                border-color: rgba(255,255,255,0.3);
-                                            }
-                                            .hiring-flow-vertical {
-                                                width: 100%;
-                                                display: flex;
-                                                flex-direction: column;
-                                                align-items: center;
-                                            }
-                                        </style>
-                                    </div>
+                    <div class="col-6 col-md-4 col-lg-3 company-item" data-company-name="{{ company.name.lower() }}">
+                        <div class="card company-card h-100 shadow-sm hover-card">
+                            <div class="card-body text-center p-3 p-md-4">
+                                <div class="company-logo-container mb-3">
+                                    {% if company.logo_url %}
+                                        <img src="{{ company.logo_url }}" alt="{{ company.name }} Logo" class="company-logo-img">
+                                    {% else %}
+                                        <div class="logo-placeholder-simple">
+                                            {{ company.name[0].upper() }}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                                
-                                <div class="row mb-3">
-                                    <div class="col-6">
-                                        <h6 class="text-muted">
-                                            <i class="fas fa-money-bill-wave me-2"></i>
-                                            CTC Offer
-                                        </h6>
-                                        <p class="card-text fw-bold text-success">{{ company.ctc_offer }}</p>
-                                    </div>
-                                    <div class="col-6">
-                                        <h6 class="text-muted">
-                                            <i class="fas fa-calendar-check me-2"></i>
-                                            Agreement
-                                        </h6>
-                                        <p class="card-text">{{ company.agreement_years }} years</p>
-                                    </div>
+                                <h6 class="company-name mb-3 d-md-none">{{ company.name[:15] }}{{ '...' if company.name|length > 15 else '' }}</h6>
+                                <h5 class="company-name mb-3 d-none d-md-block">{{ company.name }}</h5>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('company_details', company_id=company.id) }}" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1 me-md-2"></i>
+                                        <span class="d-none d-sm-inline">View Details</span>
+                                        <span class="d-sm-none">View</span>
+                                    </a>
                                 </div>
-                            </div>
-                            <div class="card-footer bg-light">
-                                <a href="{{ url_for('company_details', company_id=company.id) }}" 
-                                   class="btn btn-primary w-100">
-                                    <i class="fas fa-users me-2"></i>
-                                    View Selected Students
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -123,29 +96,29 @@
                     <i class="fas fa-chart-bar me-2"></i>
                     Quick Statistics
                 </h5>
-                <div class="row text-center">
-                    <div class="col-md-3">
-                        <div class="stat-item">
-                            <h3 class="text-primary">{{ companies|length }}</h3>
-                            <p class="text-muted">Total Companies</p>
+                <div class="row text-center g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item p-3">
+                            <h4 class="h3 text-primary mb-1">{{ companies|length }}</h4>
+                            <p class="text-muted mb-0 small">Companies</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="stat-item">
-                            <h3 class="text-success">Active</h3>
-                            <p class="text-muted">Recruitment Status</p>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item p-3">
+                            <h4 class="h3 text-success mb-1">Active</h4>
+                            <p class="text-muted mb-0 small">Status</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="stat-item">
-                            <h3 class="text-info">2026</h3>
-                            <p class="text-muted">Batch Year</p>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item p-3">
+                            <h4 class="h3 text-info mb-1">2026</h4>
+                            <p class="text-muted mb-0 small">Batch</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="stat-item">
-                            <h3 class="text-warning">IT</h3>
-                            <p class="text-muted">Branch</p>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-item p-3">
+                            <h4 class="h3 text-warning mb-1">IT</h4>
+                            <p class="text-muted mb-0 small">Branch</p>
                         </div>
                     </div>
                 </div>
@@ -154,4 +127,239 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Custom Styles and JavaScript -->
+<style>
+    .company-logo-container {
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .company-logo-img {
+        max-width: 100px;
+        max-height: 100px;
+        object-fit: contain;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .logo-placeholder-simple {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+        margin: 0 auto;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .hover-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .company-card {
+        border-radius: 15px;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .company-name {
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .company-card .btn {
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .company-card .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+    }
+    
+    .btn-hover-fill {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-hover-fill:hover {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .company-item {
+        transition: all 0.3s ease;
+    }
+    
+    .company-item.hidden {
+        display: none;
+    }
+    
+    .search-highlight {
+        background-color: yellow;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    
+    #companySearch {
+        border-radius: 25px;
+        padding: 12px 20px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    #companySearch:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .input-group-text {
+        border-radius: 25px 0 0 25px;
+        border: 2px solid #e9ecef;
+        border-right: none;
+        background-color: #f8f9fa;
+    }
+    
+    .input-group .btn {
+        border-radius: 0 25px 25px 0;
+        border: 2px solid #e9ecef;
+        border-left: none;
+    }
+    
+    /* Mobile-specific improvements */
+    @media (max-width: 768px) {
+        .company-logo-container {
+            height: 80px;
+        }
+        
+        .company-logo-img {
+            max-width: 60px;
+            max-height: 60px;
+        }
+        
+        .logo-placeholder-simple {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+        
+        .company-card {
+            border-radius: 12px;
+        }
+        
+        .company-card .card-body {
+            padding: 1rem !important;
+        }
+        
+        .mobile-search .input-group-text,
+        .mobile-search .form-control,
+        .mobile-search .btn {
+            border-radius: 20px;
+            padding: 0.75rem 1rem;
+        }
+        
+        .mobile-search .input-group-text {
+            border-radius: 20px 0 0 20px;
+        }
+        
+        .mobile-search .btn {
+            border-radius: 0 20px 20px 0;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+        }
+        
+        .welcome-message {
+            font-size: 0.9rem;
+        }
+        
+        .hover-card:hover {
+            transform: translateY(-3px);
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .company-name {
+            font-size: 0.95rem;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+        
+        .display-5 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<script>
+function filterCompanies() {
+    const searchTerm = document.getElementById('companySearch').value.toLowerCase();
+    const companies = document.querySelectorAll('.company-item');
+    let visibleCount = 0;
+    
+    companies.forEach(company => {
+        const name = company.getAttribute('data-company-name');
+        
+        if (name.includes(searchTerm)) {
+            company.classList.remove('hidden');
+            visibleCount++;
+        } else {
+            company.classList.add('hidden');
+        }
+    });
+    
+    document.getElementById('searchResults').textContent = 
+        `Showing ${visibleCount} of {{ companies|length }} companies`;
+}
+
+function clearSearch() {
+    document.getElementById('companySearch').value = '';
+    filterCompanies();
+}
+
+// Add click event to cards for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.hover-card');
+    cards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') {
+                const link = card.querySelector('a[href*="company_details"]');
+                if (link) {
+                    window.location.href = link.href;
+                }
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -29,6 +29,14 @@
                         <input type="text" class="form-control" id="student_number" name="student_number" value="{{ student.student_number }}" required>
                     </div>
                     <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-2"></i>
+                            Email Address <span class="text-danger">*</span>
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ student.email or '' }}" required>
+                        <div class="form-text">Student's email address</div>
+                    </div>
+                    <div class="mb-3">
                         <label for="linkedin_id" class="form-label">
                             <i class="fab fa-linkedin me-2"></i>
                             LinkedIn ID
@@ -47,10 +55,10 @@
                         <select class="form-select" id="max_round_reached" name="max_round_reached" required>
                             <option value="">Select round</option>
                             {% for round in company_rounds %}
-                                <option value="{{ loop.index }}" {% if student.max_round_reached|string == loop.index|string %}selected{% endif %}>Round {{ loop.index }} - {{ round }}</option>
+                                <option value="Round {{ loop.index }}" {% if student.max_round_reached == "Round " + loop.index|string %}selected{% endif %}>Round {{ loop.index }} - {{ round }}</option>
                             {% endfor %}
-                            <option value="got_offer" {% if student.max_round_reached == 'got_offer' %}selected{% endif %}>Got Offer</option>
-                            <option value="others" {% if student.max_round_reached == 'others' %}selected{% endif %}>Others</option>
+                            <option value="Got Offer" {% if student.max_round_reached == 'Got Offer' %}selected{% endif %}>Got Offer</option>
+                            <option value="Others" {% if student.max_round_reached == 'Others' %}selected{% endif %}>Others</option>
                         </select>
                         <div class="form-text">Highest round the student has cleared or reached</div>
                     </div>

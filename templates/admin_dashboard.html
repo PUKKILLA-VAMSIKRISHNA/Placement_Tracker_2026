@@ -5,41 +5,47 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="display-5">
-                <i class="fas fa-tachometer-alt me-3"></i>
-                Admin Dashboard
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+            <h1 class="display-6 display-md-5 text-center text-md-start mb-3 mb-md-0">
+                <i class="fas fa-tachometer-alt me-2"></i>
+                <span class="d-none d-sm-inline">Admin Dashboard</span>
+                <span class="d-sm-none">Dashboard</span>
             </h1>
-            <div class="text-muted">
-                Welcome, {{ session.admin_email }}
+            <div class="text-muted text-center text-md-end">
+                <i class="fas fa-user me-1"></i>
+                <span class="d-none d-sm-inline">Welcome, {{ session.admin_email }}</span>
+                <span class="d-sm-none">{{ session.admin_email.split('@')[0] }}</span>
             </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="row mb-4">
-            <div class="col-md-6 col-lg-3 mb-3">
-                <a href="{{ url_for('add_company') }}" class="btn btn-success w-100 p-3">
-                    <i class="fas fa-plus-circle fa-2x d-block mb-2"></i>
-                    <strong>Add Company</strong>
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-6 col-lg-3">
+                <a href="{{ url_for('add_company') }}" class="btn btn-success w-100 p-3 admin-action-btn">
+                    <i class="fas fa-plus-circle fa-lg fa-md-2x d-block mb-2"></i>
+                    <strong class="d-none d-sm-inline">Add Company</strong>
+                    <strong class="d-sm-none">Add</strong>
                 </a>
             </div>
-            <div class="col-md-6 col-lg-3 mb-3">
-                <a href="{{ url_for('index') }}" class="btn btn-info w-100 p-3">
-                    <i class="fas fa-eye fa-2x d-block mb-2"></i>
-                    <strong>View Public Site</strong>
+            <div class="col-6 col-md-6 col-lg-3">
+                <a href="{{ url_for('admin_reports') }}" class="btn btn-warning w-100 p-3 admin-action-btn">
+                    <i class="fas fa-chart-bar fa-lg fa-md-2x d-block mb-2"></i>
+                    <strong class="d-none d-sm-inline">View Reports</strong>
+                    <strong class="d-sm-none">Reports</strong>
                 </a>
             </div>
-            <div class="col-md-6 col-lg-3 mb-3">
-                <div class="btn btn-secondary w-100 p-3 disabled">
-                    <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
-                    <strong>Reports</strong>
-                    <small class="d-block">Coming Soon</small>
-                </div>
+            <div class="col-6 col-md-6 col-lg-3">
+                <a href="{{ url_for('index') }}" class="btn btn-info w-100 p-3 admin-action-btn">
+                    <i class="fas fa-eye fa-lg fa-md-2x d-block mb-2"></i>
+                    <strong class="d-none d-sm-inline">View Public Site</strong>
+                    <strong class="d-sm-none">Public</strong>
+                </a>
             </div>
-            <div class="col-md-6 col-lg-3 mb-3">
-                <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger w-100 p-3">
-                    <i class="fas fa-sign-out-alt fa-2x d-block mb-2"></i>
-                    <strong>Logout</strong>
+            <div class="col-6 col-md-6 col-lg-3">
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-danger w-100 p-3 admin-action-btn">
+                    <i class="fas fa-sign-out-alt fa-lg fa-md-2x d-block mb-2"></i>
+                    <strong class="d-none d-sm-inline">Logout</strong>
+                    <strong class="d-sm-none">Exit</strong>
                 </a>
             </div>
         </div>
@@ -55,7 +61,67 @@
             </div>
             <div class="card-body">
                 {% if companies %}
-                    <div class="table-responsive">
+                    <!-- Mobile Card View -->
+                    <div class="d-md-none">
+                        {% for company in companies %}
+                        <div class="card mb-3 company-mobile-card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="company-logo-small me-3">
+                                        {% if company.logo_url %}
+                                            <img src="{{ company.logo_url }}" alt="{{ company.name }} Logo" class="logo-img-small">
+                                        {% else %}
+                                            <div class="logo-placeholder-small">
+                                                {{ company.name[0].upper() }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold">{{ company.name }}</h6>
+                                        <span class="badge bg-success">{{ company.ctc_offer }}</span>
+                                    </div>
+                                </div>
+                                <div class="row text-center mb-3">
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Agreement</small>
+                                        <span class="fw-bold">{{ company.agreement_years }}y</span>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Students</small>
+                                        <a href="{{ url_for('company_details', company_id=company.id) }}" class="text-decoration-none fw-bold">
+                                            View
+                                        </a>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Created</small>
+                                        <span class="fw-bold">{{ company.created_at[:10] if company.created_at else 'N/A' }}</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('company_details', company_id=company.id) }}" 
+                                       class="btn btn-outline-primary btn-sm flex-fill">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_company', company_id=company.id) }}" 
+                                       class="btn btn-outline-warning btn-sm flex-fill">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('add_student', company_id=company.id) }}" 
+                                       class="btn btn-outline-success btn-sm flex-fill">
+                                        <i class="fas fa-user-plus"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger btn-sm flex-fill" 
+                                            onclick="deleteCompany('{{ company.id }}', '{{ company.name }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Desktop Table View -->
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-hover">
                             <thead class="table-dark">
                                 <tr>
@@ -72,7 +138,15 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <i class="fas fa-building text-primary me-2"></i>
+                                            <div class="company-logo-small me-3">
+                                                {% if company.logo_url %}
+                                                    <img src="{{ company.logo_url }}" alt="{{ company.name }} Logo" class="logo-img-small">
+                                                {% else %}
+                                                    <div class="logo-placeholder-small">
+                                                        {{ company.name[0].upper() }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
                                             <strong>{{ company.name }}</strong>
                                         </div>
                                     </td>
@@ -162,6 +236,100 @@
         </div>
     </div>
 </div>
+
+<!-- Custom Styles -->
+<style>
+    .company-logo-small {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .logo-img-small {
+        max-width: 35px;
+        max-height: 35px;
+        object-fit: contain;
+        border-radius: 5px;
+    }
+    
+    .logo-placeholder-small {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: bold;
+        color: white;
+    }
+    
+    /* Mobile-specific styles */
+    .company-mobile-card {
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .company-mobile-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+    }
+    
+    .admin-action-btn {
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .admin-action-btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    @media (max-width: 768px) {
+        .admin-action-btn {
+            padding: 1.5rem 1rem !important;
+        }
+        
+        .admin-action-btn i {
+            font-size: 1.2rem !important;
+        }
+        
+        .admin-action-btn strong {
+            font-size: 0.85rem;
+        }
+        
+        .company-mobile-card .btn-sm {
+            padding: 0.4rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .display-6 {
+            font-size: 1.8rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .admin-action-btn {
+            padding: 1rem 0.5rem !important;
+        }
+        
+        .company-mobile-card .card-body {
+            padding: 1rem;
+        }
+        
+        .company-mobile-card h6 {
+            font-size: 0.95rem;
+        }
+        
+        .badge {
+            font-size: 0.7rem;
+        }
+    }
+</style>
 
 <script>
 function deleteCompany(companyId, companyName) {

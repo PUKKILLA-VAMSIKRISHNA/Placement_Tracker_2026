@@ -15,29 +15,36 @@
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <i class="fas fa-graduation-cap me-2"></i>
-                IT Branch 2026 Placements
+                <span class="d-none d-md-inline">IT Branch 2026 Placements</span>
+                <span class="d-md-none">IT 2026 Batch Placements</span>
             </a>
             
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link me-3" href="{{ url_for('developers') }}">
-                    <i class="fas fa-users me-1"></i>
-                    Developers
-                </a>
-                {% if not session.get('admin_logged_in') %}
-                    <a class="nav-link" href="{{ url_for('admin_login') }}">
-                        <i class="fas fa-user-shield me-1"></i>
-                        Admin Login
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link me-3" href="{{ url_for('developers') }}">
+                        <i class="fas fa-users me-1"></i>
+                        Developers
                     </a>
-                {% else %}
-                    <a class="nav-link me-3" href="{{ url_for('admin_dashboard') }}">
-                        <i class="fas fa-tachometer-alt me-1"></i>
-                        Dashboard
-                    </a>
-                    <a class="nav-link" href="{{ url_for('admin_logout') }}">
-                        <i class="fas fa-sign-out-alt me-1"></i>
-                        Logout
-                    </a>
-                {% endif %}
+                    {% if not session.get('admin_logged_in') %}
+                        <a class="nav-link" href="{{ url_for('admin_login') }}">
+                            <i class="fas fa-user-shield me-1"></i>
+                            Admin Login
+                        </a>
+                    {% else %}
+                        <a class="nav-link me-3" href="{{ url_for('admin_dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-1"></i>
+                            Dashboard
+                        </a>
+                        <a class="nav-link" href="{{ url_for('admin_logout') }}">
+                            <i class="fas fa-sign-out-alt me-1"></i>
+                            Logout
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
