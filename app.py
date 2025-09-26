@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, make_response, Response
 from supabase import create_client, Client
 import os
 from datetime import datetime
@@ -21,14 +21,9 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key')
 
-# File upload configuration
-UPLOAD_FOLDER = 'uploads/model_papers'
+# File upload configuration for Supabase Storage
 ALLOWED_EXTENSIONS = {'pdf'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-
-# Create upload directory if it doesn't exist
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Supabase configuration
 SUPABASE_URL = os.getenv('SUPABASE_URL')
@@ -1071,7 +1066,7 @@ def generate_pdf_report(companies, students):
 
 @app.route('/admin/upload_model_paper/<company_id>', methods=['POST'])
 def upload_model_paper(company_id):
-    """Upload model paper for a company"""
+    """Upload model paper for a company using Supabase Storage"""
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
     
@@ -1095,24 +1090,75 @@ def upload_model_paper(company_id):
             filename = secure_filename(file.filename)
             # Create unique filename to avoid conflicts
             unique_filename = f"{uuid.uuid4()}_{filename}"
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            file.save(file_path)
             
-            # Get file size
-            file_size = os.path.getsize(file_path)
+            # Read file content into memory
+            file_content = file.read()
+            file_size = len(file_content)
             
-            # Save to database
-            model_paper_data = {
-                'company_id': company_id,
-                'paper_name': paper_name,
-                'file_url': f'/uploads/model_papers/{unique_filename}',
-                'file_size': file_size,
-                'uploaded_by': session.get('admin_email'),
-                'created_at': datetime.now().isoformat()
-            }
-            
-            supabase.table('model_papers').insert(model_paper_data).execute()
-            flash('Model paper uploaded successfully!', 'success')
+            # Upload to Supabase Storage
+            try:
+                # Upload file to Supabase Storage bucket 'model-papers'
+                storage_response = supabase.storage.from_('model-papers').upload(
+                    path=unique_filename,
+                    file=file_content,
+                    file_options={
+                        'content-type': 'application/pdf',
+                        'cache-control': '3600'
+                    }
+                )
+                
+                # Get public URL for the uploaded file
+                public_url = supabase.storage.from_('model-papers').get_public_url(unique_filename)
+                
+                # Save to database
+                model_paper_data = {
+                    'company_id': company_id,
+                    'paper_name': paper_name,
+                    'file_url': public_url,
+                    'file_size': file_size,
+                    'uploaded_by': session.get('admin_email'),
+                    'created_at': datetime.now().isoformat()
+                }
+                
+                supabase.table('model_papers').insert(model_paper_data).execute()
+                flash('Model paper uploaded successfully!', 'success')
+                
+            except Exception as storage_error:
+                # Fallback: try creating bucket if it doesn't exist
+                try:
+                    supabase.storage.create_bucket('model-papers', {
+                        'public': True,
+                        'file_size_limit': 16777216,  # 16MB
+                        'allowed_mime_types': ['application/pdf']
+                    })
+                    
+                    # Retry upload after creating bucket
+                    storage_response = supabase.storage.from_('model-papers').upload(
+                        path=unique_filename,
+                        file=file_content,
+                        file_options={
+                            'content-type': 'application/pdf',
+                            'cache-control': '3600'
+                        }
+                    )
+                    
+                    public_url = supabase.storage.from_('model-papers').get_public_url(unique_filename)
+                    
+                    model_paper_data = {
+                        'company_id': company_id,
+                        'paper_name': paper_name,
+                        'file_url': public_url,
+                        'file_size': file_size,
+                        'uploaded_by': session.get('admin_email'),
+                        'created_at': datetime.now().isoformat()
+                    }
+                    
+                    supabase.table('model_papers').insert(model_paper_data).execute()
+                    flash('Model paper uploaded successfully!', 'success')
+                    
+                except Exception as retry_error:
+                    flash(f'Error uploading to cloud storage: {str(retry_error)}', 'error')
+                    
         else:
             flash('Invalid file type. Only PDF files are allowed.', 'error')
             
@@ -1123,7 +1169,7 @@ def upload_model_paper(company_id):
 
 @app.route('/admin/delete_model_paper/<paper_id>', methods=['POST'])
 def delete_model_paper(paper_id):
-    """Delete model paper"""
+    """Delete model paper from Supabase Storage"""
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
     
@@ -1134,10 +1180,17 @@ def delete_model_paper(paper_id):
             paper = paper_response.data[0]
             company_id = paper['company_id']
             
-            # Delete file from filesystem
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], os.path.basename(paper['file_url']))
-            if os.path.exists(file_path):
-                os.remove(file_path)
+            # Extract filename from URL for Supabase Storage deletion
+            file_url = paper['file_url']
+            if 'model-papers' in file_url:
+                # Extract filename from Supabase Storage URL
+                filename = file_url.split('/')[-1]
+                try:
+                    # Delete file from Supabase Storage
+                    supabase.storage.from_('model-papers').remove([filename])
+                except Exception as storage_error:
+                    print(f"Warning: Could not delete file from storage: {str(storage_error)}")
+                    # Continue with database deletion even if file deletion fails
             
             # Delete from database
             supabase.table('model_papers').delete().eq('id', paper_id).execute()
@@ -1152,9 +1205,17 @@ def delete_model_paper(paper_id):
 
 @app.route('/uploads/model_papers/<filename>')
 def download_model_paper(filename):
-    """Download model paper"""
+    """Download model paper - redirect to Supabase Storage URL"""
     try:
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+        # For Supabase Storage, we'll redirect to the public URL
+        # The file_url in database already contains the full public URL
+        paper_response = supabase.table('model_papers').select('file_url, paper_name').like('file_url', f'%{filename}%').execute()
+        if paper_response.data:
+            file_url = paper_response.data[0]['file_url']
+            return redirect(file_url)
+        else:
+            flash('File not found', 'error')
+            return redirect(url_for('index'))
     except Exception as e:
         flash(f'Error downloading file: {str(e)}', 'error')
         return redirect(url_for('index'))
@@ -1209,6 +1270,95 @@ def edit_student(student_id):
             flash(f'Error updating student: {str(e)}', 'error')
 
     return render_template('edit_student.html', student=student, company_id=company_id, company_name=company_name, company_rounds=company_rounds)
+
+# SEO Routes
+@app.route('/sitemap.xml')
+def sitemap():
+    """Generate dynamic sitemap for SEO"""
+    try:
+        # Get all companies for dynamic URLs
+        companies_response = supabase.table('companies').select('id, name, updated_at').execute()
+        companies = companies_response.data
+        
+        # Base URL (you should replace this with your actual domain)
+        base_url = request.url_root.rstrip('/')
+        
+        # Generate sitemap XML
+        sitemap_xml = '''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>{base_url}/</loc>
+        <lastmod>{lastmod}</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+    <url>
+        <loc>{base_url}/developers</loc>
+        <lastmod>{lastmod}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>'''.format(base_url=base_url, lastmod=datetime.now().strftime('%Y-%m-%d'))
+        
+        # Add company pages
+        for company in companies:
+            company_lastmod = company.get('updated_at', company.get('created_at', datetime.now().isoformat()))
+            try:
+                # Parse the datetime string and format it for sitemap
+                if isinstance(company_lastmod, str):
+                    company_date = datetime.fromisoformat(company_lastmod.replace('Z', '+00:00'))
+                    formatted_date = company_date.strftime('%Y-%m-%d')
+                else:
+                    formatted_date = datetime.now().strftime('%Y-%m-%d')
+            except:
+                formatted_date = datetime.now().strftime('%Y-%m-%d')
+            
+            sitemap_xml += '''
+    <url>
+        <loc>{base_url}/company/{company_id}</loc>
+        <lastmod>{lastmod}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>'''.format(base_url=base_url, company_id=company['id'], lastmod=formatted_date)
+        
+        sitemap_xml += '''
+</urlset>'''
+        
+        response = Response(sitemap_xml, mimetype='application/xml')
+        return response
+        
+    except Exception as e:
+        # Return basic sitemap if database error
+        basic_sitemap = '''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>{base_url}/</loc>
+        <lastmod>{lastmod}</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+</urlset>'''.format(base_url=request.url_root.rstrip('/'), lastmod=datetime.now().strftime('%Y-%m-%d'))
+        
+        return Response(basic_sitemap, mimetype='application/xml')
+
+@app.route('/robots.txt')
+def robots():
+    """Generate robots.txt for search engine crawlers"""
+    base_url = request.url_root.rstrip('/')
+    
+    robots_txt = '''User-agent: *
+Allow: /
+Allow: /company/*
+Allow: /developers
+Disallow: /admin*
+Disallow: /uploads/*
+
+# Sitemap location
+Sitemap: {base_url}/sitemap.xml
+
+# Crawl delay (optional)
+Crawl-delay: 1'''.format(base_url=base_url)
+    
+    return Response(robots_txt, mimetype='text/plain')
 
 # For Vercel deployment
 if __name__ == '__main__':

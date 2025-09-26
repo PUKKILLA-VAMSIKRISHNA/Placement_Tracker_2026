@@ -3,11 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}IT Branch 2026 Placements{% endblock %}</title>
+
+    
+    <!-- SEO Meta Tags -->
+    <title>{% block title %}IT Branch 2026 Placements - Track Student Placement Progress{% endblock %}</title>
+    <meta name="description" content="{% block description %}Track IT Branch 2026 student placements, company hiring processes, and placement statistics. View company details, hiring rounds, and student progress.{% endblock %}">
+    <meta name="keywords" content="{% block keywords %}IT placements, student placements 2026, college placements, hiring process, placement tracker, IT jobs, GMRIT IT placements 2026, Bhargav IT placements, GMRIT 2026 placements tracker, IT 2026 placements tracker,placements{% endblock %}">
+    <meta name="author" content="IT Branch 2026 Placement Team">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{% block canonical %}{{ request.url }}{% endblock %}">
+    
+    <!-- Open Graph Meta Tags for Social Media -->
+    <meta property="og:title" content="{% block og_title %}IT Branch 2026 Placements{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Track IT Branch 2026 student placements, company hiring processes, and placement statistics.{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:site_name" content="IT Branch 2026 Placements">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}IT Branch 2026 Placements{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Track IT Branch 2026 student placements and company hiring processes.{% endblock %}">
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "IT Branch 2026 Placement Tracker",
+        "description": "Track IT Branch 2026 student placements, company hiring processes, and placement statistics",
+        "url": "{{ request.url_root }}",
+        "sameAs": [],
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "Placement Office",
+            "email": "placements@itbranch2026.edu"
+        }
+    }
+    </script>
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="msapplication-TileColor" content="#0d6efd">
+    <meta name="application-name" content="IT Branch 2026 Placements">
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- CSS Resources -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/greeting.css') }}" rel="stylesheet">
+    <meta name="google-site-verification" content="K-GOkvKibb6DqqeObQ38196D6tTqu3hBTWX3QAu-7Fw" />
 </head>
 <body>
     <!-- Navigation -->

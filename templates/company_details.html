@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}{{ company.name }} - Company Details{% endblock %}
+{% block title %}{{ company.name }} - Placement Details & Hiring Process | IT Branch 2026{% endblock %}
+
+{% block description %}View {{ company.name }} placement details for IT Branch 2026. Explore hiring process, CTC package ({{ company.ctc_offer }}), student progress, and download model papers.{% endblock %}
+
+{% block keywords %}{{ company.name }} placement, {{ company.name }} hiring process, IT placement {{ company.name }}, campus placement details, {{ company.ctc_offer }} CTC{% endblock %}
+
+{% block og_title %}{{ company.name }} - Placement Details{% endblock %}
+{% block og_description %}View {{ company.name }} placement details for IT Branch 2026. CTC: {{ company.ctc_offer }}, Bond: {{ company.agreement_years }} years.{% endblock %}
+
+{% block twitter_title %}{{ company.name }} - Placement Details{% endblock %}
+{% block twitter_description %}{{ company.name }} placement details for IT Branch 2026. CTC: {{ company.ctc_offer }}.{% endblock %}
 
 {% block content %}
 <div class="row">
