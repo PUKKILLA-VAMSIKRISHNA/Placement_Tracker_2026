@@ -1099,9 +1099,9 @@ def upload_model_paper(company_id):
             try:
                 # Upload file to Supabase Storage bucket 'model-papers'
                 storage_response = supabase.storage.from_('model-papers').upload(
-                    path=unique_filename,
-                    file=file_content,
-                    file_options={
+                    unique_filename,
+                    file_content,
+                    {
                         'content-type': 'application/pdf',
                         'cache-control': '3600'
                     }
@@ -1134,9 +1134,9 @@ def upload_model_paper(company_id):
                     
                     # Retry upload after creating bucket
                     storage_response = supabase.storage.from_('model-papers').upload(
-                        path=unique_filename,
-                        file=file_content,
-                        file_options={
+                        unique_filename,
+                        file_content,
+                        {
                             'content-type': 'application/pdf',
                             'cache-control': '3600'
                         }
