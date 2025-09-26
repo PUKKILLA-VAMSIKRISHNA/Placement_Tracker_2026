@@ -62,6 +62,35 @@ def index():
         flash(f'Error loading companies: {str(e)}', 'error')
         return render_template('index.html', companies=[])
 
+def sort_students_by_priority(students):
+    """Sort students by priority: Got Offer first, then by rounds descending, then Others last"""
+    def get_sort_key(student):
+        max_round = student['max_round_reached']
+        
+        # Priority 1: Students with "Got Offer" (highest priority = 0)
+        if max_round == 'Got Offer':
+            return (0, 0, student['name'])  # Sort by name as tiebreaker
+        
+        # Priority 3: Students with "Others" (lowest priority = 2)
+        elif max_round == 'Others':
+            return (2, 0, student['name'])  # Sort by name as tiebreaker
+        
+        # Priority 2: Students with rounds (middle priority = 1)
+        elif max_round.startswith('Round '):
+            try:
+                # Extract round number for descending sort
+                round_num = int(max_round.split(' ')[1])
+                return (1, -round_num, student['name'])  # Negative for descending order
+            except (ValueError, IndexError):
+                # If round parsing fails, treat as Others
+                return (2, 0, student['name'])
+        
+        # Default case: treat as Others
+        else:
+            return (2, 0, student['name'])
+    
+    return sorted(students, key=get_sort_key)
+
 @app.route('/company/<company_id>')
 def company_details(company_id):
     """Display detailed view of a specific company"""
@@ -77,6 +106,9 @@ def company_details(company_id):
         # Fetch selected students for this company
         students_response = supabase.table('selected_students').select('*').eq('company_id', company_id).execute()
         students = students_response.data
+        
+        # Sort students by priority: Got Offer first, then by rounds descending, then Others last
+        students = sort_students_by_priority(students)
         
         # Fetch model papers for this company
         model_papers_response = supabase.table('model_papers').select('*').eq('company_id', company_id).execute()
@@ -400,6 +432,10 @@ def admin_reports():
             else:
                 company_stats[company_id]['company'] = company
             
+            # Sort students within each company by priority
+            if company_stats[company_id]['students']:
+                company_stats[company_id]['students'] = sort_students_by_priority(company_stats[company_id]['students'])
+            
             # Parse hiring rounds for this company
             hiring_rounds_str = company.get('hiring_rounds', '')
             company_rounds = [r.strip() for r in hiring_rounds_str.split(',') if r.strip()]
@@ -417,6 +453,10 @@ def admin_reports():
                 if student['student_number'] not in seen_student_numbers:
                     unique_students_with_offers.append(student)
                     seen_student_numbers.add(student['student_number'])
+        
+        # Sort both lists by student name for consistent display
+        students_with_offers = sorted(students_with_offers, key=lambda x: x['name'])
+        unique_students_with_offers = sorted(unique_students_with_offers, key=lambda x: x['name'])
         
         return render_template('admin_reports.html', 
                              companies=companies, 
@@ -517,7 +557,7 @@ def generate_excel_report(companies, students):
         overall_stats_data = [
             ['Total No of Companies', len(companies)],
             ['All Company Names', ', '.join([c['name'] for c in companies])],
-            ['Total No of Students', len(students)],
+            ['Total No of Students', len(unique_students)],  # Fixed: Use unique student count
             ['Total Got Offers', total_got_offers],
             ['Total Unique Students with Offers', len(unique_offer_students)]
         ]
@@ -621,6 +661,8 @@ def generate_excel_report(companies, students):
         for company in companies:
             company_students = [s for s in students if s['company_id'] == company['id']]
             if company_students:
+                # Sort students by priority: Got Offer first, then by rounds descending, then Others last
+                company_students = sort_students_by_priority(company_students)
                 student_details = []
                 for student in company_students:
                     student_details.append({
@@ -801,7 +843,7 @@ def generate_pdf_report(companies, students):
     summary_data = [
         ['Total No of Companies', str(len(companies))],
         ['All Company Names', Paragraph(company_names_text, summary_style)],
-        ['Total No of Students', str(len(students))],
+        ['Total No of Students', str(len(unique_students))],  # Fixed: Use unique student count
         ['Total Got Offers', str(total_got_offers)],
         ['Total Unique Students with Offers', str(len(unique_offer_students))]
     ]
@@ -827,6 +869,8 @@ def generate_pdf_report(companies, students):
     # 2. Company-wise Statistics and Student Details
     for company in companies:
         company_students = [s for s in students if s['company_id'] == company['id']]
+        # Sort students by priority: Got Offer first, then by rounds descending, then Others last
+        company_students = sort_students_by_priority(company_students)
         got_offer_count = len([s for s in company_students if s['max_round_reached'] == 'Got Offer'])
         
         # Company header

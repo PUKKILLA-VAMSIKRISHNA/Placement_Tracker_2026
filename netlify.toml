@@ -1,0 +1,33 @@
+[build]
+  # Build command for Python Flask application
+  command = "pip install -r requirements.txt"
+  
+  # Publish directory (where the built files are located)
+  publish = "."
+
+[build.environment]
+  # Python version
+  PYTHON_VERSION = "3.9"
+
+# Redirect rules for Flask application
+[[redirects]]
+  from = "/*"
+  to = "/index.py"
+  status = 200
+  force = false
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Environment variables (these will be set in Netlify dashboard)
+[context.production.environment]
+  FLASK_ENV = "production"
+  
+[context.deploy-preview.environment]
+  FLASK_ENV = "development"
