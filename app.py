@@ -1097,30 +1097,14 @@ def upload_model_paper(company_id):
             
             # Upload to Supabase Storage
             try:
-                # Try different upload method formats based on supabase-py version
-                try:
-                    # Method 1: Latest supabase-py format
-                    storage_response = supabase.storage.from_('model-papers').upload(
-                        file=file_content,
-                        path=unique_filename,
-                        file_options={'content-type': 'application/pdf'}
-                    )
-                except Exception as method1_error:
-                    try:
-                        # Method 2: Alternative format
-                        storage_response = supabase.storage.from_('model-papers').upload(
-                            path=unique_filename,
-                            file=file_content
-                        )
-                    except Exception as method2_error:
-                        # Method 3: Simple positional arguments
-                        storage_response = supabase.storage.from_('model-papers').upload(
-                            unique_filename,
-                            file_content
-                        )
+                # Try the most basic upload method first
+                bucket = supabase.storage.from_('model-papers')
+                
+                # Upload file with minimal parameters
+                result = bucket.upload(unique_filename, file_content)
                 
                 # Get public URL for the uploaded file
-                public_url = supabase.storage.from_('model-papers').get_public_url(unique_filename)
+                public_url = bucket.get_public_url(unique_filename)
                 
                 # Save to database
                 model_paper_data = {
@@ -1136,21 +1120,24 @@ def upload_model_paper(company_id):
                 flash('Model paper uploaded successfully!', 'success')
                 
             except Exception as storage_error:
-                # Fallback: try creating bucket if it doesn't exist
+                print(f"Storage error details: {storage_error}")
+                # Try alternative approach - create bucket first if needed
                 try:
-                    supabase.storage.create_bucket('model-papers', {
-                        'public': True,
-                        'file_size_limit': 16777216,  # 16MB
-                        'allowed_mime_types': ['application/pdf']
-                    })
+                    # Try to create bucket if it doesn't exist
+                    try:
+                        supabase.storage.create_bucket('model-papers', {
+                            'public': True,
+                            'file_size_limit': 16777216,  # 16MB
+                            'allowed_mime_types': ['application/pdf']
+                        })
+                    except:
+                        pass  # Bucket might already exist
                     
-                    # Retry upload after creating bucket with simple method
-                    storage_response = supabase.storage.from_('model-papers').upload(
-                        unique_filename,
-                        file_content
-                    )
+                    # Try upload with different method
+                    bucket = supabase.storage.from_('model-papers')
+                    result = bucket.upload(unique_filename, file_content)
                     
-                    public_url = supabase.storage.from_('model-papers').get_public_url(unique_filename)
+                    public_url = bucket.get_public_url(unique_filename)
                     
                     model_paper_data = {
                         'company_id': company_id,
@@ -1165,6 +1152,7 @@ def upload_model_paper(company_id):
                     flash('Model paper uploaded successfully!', 'success')
                     
                 except Exception as retry_error:
+                    print(f"Retry error details: {retry_error}")
                     flash(f'Error uploading to cloud storage: {str(retry_error)}', 'error')
                     
         else:
