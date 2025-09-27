@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import uuid
 import pandas as pd
 from io import BytesIO
+import base64
 import xlsxwriter
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
@@ -27,20 +28,45 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Supabase configuration
 SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_KEY = os.getenv('SUPABASE_ANON_KEY')
+SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')
+SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY')
 
 # Initialize Supabase client
 supabase = None
-if SUPABASE_URL and SUPABASE_KEY:
+supabase_admin = None  # For storage operations that require elevated permissions
+
+if SUPABASE_URL and SUPABASE_ANON_KEY:
     try:
-        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        # Regular client for database operations
+        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        
+        # Admin client for storage operations (if service key is available)
+        if SUPABASE_SERVICE_KEY:
+            supabase_admin = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+        else:
+            print("Warning: SUPABASE_SERVICE_KEY not found. Storage operations may fail due to RLS policies.")
+            supabase_admin = supabase  # Fallback to regular client
+            
     except Exception as e:
         print(f"Error initializing Supabase client: {str(e)}")
         supabase = None
+        supabase_admin = None
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def test_supabase_storage():
+    """Test Supabase storage connection and bucket access"""
+    try:
+        if not supabase:
+            return False, "Supabase client not initialized"
+        
+        # Try to list buckets to test connection
+        buckets = supabase.storage.list_buckets()
+        return True, f"Storage connection successful. Found {len(buckets)} buckets."
+    except Exception as e:
+        return False, f"Storage connection failed: {str(e)}"
 
 @app.route('/')
 def index():
@@ -1064,6 +1090,20 @@ def generate_pdf_report(companies, students):
     
     return response
 
+@app.route('/admin/test_storage')
+def test_storage():
+    """Test route to check Supabase storage connection"""
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    
+    success, message = test_supabase_storage()
+    if success:
+        flash(f'Storage Test: {message}', 'success')
+    else:
+        flash(f'Storage Test Failed: {message}', 'error')
+    
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/admin/upload_model_paper/<company_id>', methods=['POST'])
 def upload_model_paper(company_id):
     """Upload model paper for a company using Supabase Storage"""
@@ -1095,16 +1135,63 @@ def upload_model_paper(company_id):
             file_content = file.read()
             file_size = len(file_content)
             
+            # Reset file pointer and create BytesIO object for alternative upload methods
+            file_bytes = BytesIO(file_content)
+            
             # Upload to Supabase Storage
             try:
-                # Try the most basic upload method first
-                bucket = supabase.storage.from_('model-papers')
-                
-                # Upload file with minimal parameters
-                result = bucket.upload(unique_filename, file_content)
+                # Upload file to Supabase Storage bucket 'model-papers'
+                # Try multiple method signatures for different Supabase client versions
+                try:
+                    # Method 1: Latest Supabase client (using admin client for storage)
+                    storage_client = supabase_admin if supabase_admin else supabase
+                    storage_response = storage_client.storage.from_('model-papers').upload(
+                        file=file_content,
+                        path=unique_filename,
+                        file_options={
+                            'content-type': 'application/pdf',
+                            'cache-control': '3600'
+                        }
+                    )
+                except Exception as method1_error:
+                    print(f"Method 1 failed: {str(method1_error)}")
+                    try:
+                        # Method 2: Alternative signature
+                        storage_response = storage_client.storage.from_('model-papers').upload(
+                            path=unique_filename,
+                            file=file_content,
+                            file_options={
+                                'content-type': 'application/pdf'
+                            }
+                        )
+                    except Exception as method2_error:
+                        print(f"Method 2 failed: {str(method2_error)}")
+                        try:
+                            # Method 3: Simple signature
+                            storage_response = storage_client.storage.from_('model-papers').upload(
+                                unique_filename,
+                                file_content
+                            )
+                        except Exception as method3_error:
+                            print(f"Method 3 failed: {str(method3_error)}")
+                            try:
+                                # Method 4: Using BytesIO object
+                                storage_response = storage_client.storage.from_('model-papers').upload(
+                                    unique_filename,
+                                    file_bytes
+                                )
+                            except Exception as method4_error:
+                                print(f"Method 4 failed: {str(method4_error)}")
+                                # Method 5: Base64 encoded string (last resort)
+                                file_base64 = base64.b64encode(file_content).decode('utf-8')
+                                storage_response = storage_client.storage.from_('model-papers').upload(
+                                    unique_filename,
+                                    file_base64,
+                                    {'content-type': 'application/pdf'}
+                                )
                 
                 # Get public URL for the uploaded file
-                public_url = bucket.get_public_url(unique_filename)
+                public_url = storage_client.storage.from_('model-papers').get_public_url(unique_filename)
                 
                 # Save to database
                 model_paper_data = {
@@ -1120,24 +1207,69 @@ def upload_model_paper(company_id):
                 flash('Model paper uploaded successfully!', 'success')
                 
             except Exception as storage_error:
-                print(f"Storage error details: {storage_error}")
-                # Try alternative approach - create bucket first if needed
+                print(f"Initial storage upload failed: {str(storage_error)}")
+                # Fallback: try creating bucket if it doesn't exist
                 try:
-                    # Try to create bucket if it doesn't exist
+                    storage_client.storage.create_bucket('model-papers', {
+                        'public': True,
+                        'file_size_limit': 16777216,  # 16MB
+                        'allowed_mime_types': ['application/pdf']
+                    })
+                    
+                    # Retry upload after creating bucket
+                    # Try multiple method signatures for different Supabase client versions
                     try:
-                        supabase.storage.create_bucket('model-papers', {
-                            'public': True,
-                            'file_size_limit': 16777216,  # 16MB
-                            'allowed_mime_types': ['application/pdf']
-                        })
-                    except:
-                        pass  # Bucket might already exist
+                        # Method 1: Latest Supabase client
+                        storage_response = storage_client.storage.from_('model-papers').upload(
+                            file=file_content,
+                            path=unique_filename,
+                            file_options={
+                                'content-type': 'application/pdf',
+                                'cache-control': '3600'
+                            }
+                        )
+                    except Exception as retry_method1_error:
+                        print(f"Retry Method 1 failed: {str(retry_method1_error)}")
+                        try:
+                            # Method 2: Alternative signature
+                            storage_response = storage_client.storage.from_('model-papers').upload(
+                                path=unique_filename,
+                                file=file_content,
+                                file_options={
+                                    'content-type': 'application/pdf'
+                                }
+                            )
+                        except Exception as retry_method2_error:
+                            print(f"Retry Method 2 failed: {str(retry_method2_error)}")
+                            try:
+                                # Method 3: Simple signature
+                                storage_response = storage_client.storage.from_('model-papers').upload(
+                                    unique_filename,
+                                    file_content
+                                )
+                            except Exception as retry_method3_error:
+                                print(f"Retry Method 3 failed: {str(retry_method3_error)}")
+                                try:
+                                    # Method 4: Using BytesIO object
+                                    storage_response = storage_client.storage.from_('model-papers').upload(
+                                        unique_filename,
+                                        file_bytes
+                                    )
+                                except Exception as retry_method4_error:
+                                    print(f"Retry Method 4 failed: {str(retry_method4_error)}")
+                                    try:
+                                        # Method 5: Base64 encoded string (last resort)
+                                        file_base64 = base64.b64encode(file_content).decode('utf-8')
+                                        storage_response = storage_client.storage.from_('model-papers').upload(
+                                            unique_filename,
+                                            file_base64,
+                                            {'content-type': 'application/pdf'}
+                                        )
+                                    except Exception as retry_method5_error:
+                                        print(f"Retry Method 5 failed: {str(retry_method5_error)}")
+                                        
                     
-                    # Try upload with different method
-                    bucket = supabase.storage.from_('model-papers')
-                    result = bucket.upload(unique_filename, file_content)
-                    
-                    public_url = bucket.get_public_url(unique_filename)
+                    public_url = storage_client.storage.from_('model-papers').get_public_url(unique_filename)
                     
                     model_paper_data = {
                         'company_id': company_id,
@@ -1152,7 +1284,6 @@ def upload_model_paper(company_id):
                     flash('Model paper uploaded successfully!', 'success')
                     
                 except Exception as retry_error:
-                    print(f"Retry error details: {retry_error}")
                     flash(f'Error uploading to cloud storage: {str(retry_error)}', 'error')
                     
         else:
