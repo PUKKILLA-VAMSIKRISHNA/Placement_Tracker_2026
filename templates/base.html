@@ -75,6 +75,14 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="navbar-nav ms-auto">
+                    {% if session.get('student_id') or session.get('user_id') %}
+                        <!-- Logged in users can see companies -->
+                        <a class="nav-link me-3" href="{{ url_for('companies') }}">
+                            <i class="fas fa-building me-1"></i>
+                            Companies
+                        </a>
+                    {% endif %}
+                    
                     <a class="nav-link me-3" href="{{ url_for('developers') }}">
                         <i class="fas fa-users me-1"></i>
                         Developers
@@ -85,16 +93,6 @@
                         <a class="nav-link me-3" href="{{ url_for('student_dashboard') }}">
                             <i class="fas fa-user me-1"></i>
                             Dashboard
-                        </a>
-                        <a class="nav-link me-3" href="{{ url_for('student_logout') }}">
-                            <i class="fas fa-sign-out-alt me-1"></i>
-                            Logout
-                        </a>
-                    {% elif session.get('student_id') %}
-                        <!-- Student is logged in -->
-                        <a class="nav-link me-3" href="{{ url_for('student_dashboard') }}">
-                            <i class="fas fa-user me-1"></i>
-                            {{ session.get('student_name', 'Student') }}
                         </a>
                         <a class="nav-link me-3" href="{{ url_for('student_logout') }}">
                             <i class="fas fa-sign-out-alt me-1"></i>

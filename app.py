@@ -84,15 +84,25 @@ def test_supabase_storage():
 
 @app.route('/')
 def index():
-    """Main page displaying all companies as cards"""
+    """Home page"""
+    return render_template('home.html')
+
+@app.route('/companies')
+def companies():
+    """Companies page - requires login (student or admin)"""
+    # Check if user is logged in (either as student or admin)
+    if 'user_id' not in session and 'student_id' not in session:
+        flash('Please login to view placement companies.', 'warning')
+        return redirect(url_for('index'))
+    
     if not supabase:
         return render_template('index.html', companies=[])
     
     try:
         # Fetch all companies from Supabase
         response = supabase.table('companies').select('*').execute()
-        companies = response.data
-        return render_template('index.html', companies=companies)
+        companies_list = response.data
+        return render_template('index.html', companies=companies_list)
     except Exception as e:
         flash(f'Error loading companies: {str(e)}', 'error')
         return render_template('index.html', companies=[])
