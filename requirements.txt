@@ -7,3 +7,5 @@ xlsxwriter
 reportlab
 openpyxl
 Pillow
+werkzeug
+flask-mail

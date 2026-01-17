@@ -86,3 +86,5 @@ coverage.xml
 
 # Large files that shouldn't be in repo
 uploads/model_papers/*.pdf
+.env
+.env

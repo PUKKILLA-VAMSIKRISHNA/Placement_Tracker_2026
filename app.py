@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, make_response, Response
+from flask_mail import Mail, Message
 from supabase import create_client, Client
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 # Password hashing removed as per request
 from dotenv import load_dotenv
 import uuid
@@ -15,12 +16,25 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+import random
+import re
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key')
+
+# Flask-Mail configuration
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', 'placementtrackergmrit@gmail.com')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', '')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', 'placementtrackergmrit@gmail.com')
+
+mail = Mail(app)
 
 # File upload configuration for Supabase Storage
 ALLOWED_EXTENSIONS = {'pdf'}
@@ -1487,7 +1501,344 @@ Crawl-delay: 1'''.format(base_url=base_url)
     
     return Response(robots_txt, mimetype='text/plain')
 
+# ============================================
+# STUDENT AUTHENTICATION ROUTES
+# ============================================
+
+def validate_gmrit_email(email):
+    """Validate GMRIT email format: XX34XA12XX@gmrit.edu.in (where X = digit 0-9)"""
+    pattern = r'^\d{2}34\d[aA]12\d{2}@gmrit\.edu\.in$'
+    return re.match(pattern, email) is not None
+
+def validate_student_number(student_number):
+    """Validate student number format: XX34XA12XX (where X = digit 0-9)"""
+    pattern = r'^\d{2}34\d[aA]12\d{2}$'
+    return re.match(pattern, student_number) is not None
+
+def generate_otp():
+    """Generate a 6-digit OTP"""
+    return str(random.randint(100000, 999999))
+
+def send_otp_email(email, otp):
+    """Send OTP email to student"""
+    try:
+        print(f"Attempting to send email to: {email}")
+        print(f"Using MAIL_USERNAME: {app.config['MAIL_USERNAME']}")
+        print(f"Using MAIL_SERVER: {app.config['MAIL_SERVER']}")
+        
+        msg = Message(
+            'Password Reset OTP - Placement Tracker',
+            recipients=[email]
+        )
+        msg.body = f'''Hello,
+
+You have requested to reset your password for the Placement Tracker system.
+
+Your OTP is: {otp}
+
+This OTP will expire in 10 minutes.
+
+If you did not request this, please ignore this email.
+
+Best regards,
+Placement Tracker Team
+GMRIT'''
+        
+        mail.send(msg)
+        print(f"Email sent successfully to {email}")
+        return True
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+@app.route('/student/register', methods=['GET', 'POST'])
+def student_register():
+    """Student registration page"""
+    if request.method == 'POST':
+        try:
+            full_name = request.form.get('full_name', '').strip()
+            student_number = request.form.get('student_number', '').strip().upper()
+            email = request.form.get('email', '').strip().lower()
+            password = request.form.get('password', '')
+            confirm_password = request.form.get('confirm_password', '')
+            
+            # Validation
+            if not all([full_name, student_number, email, password, confirm_password]):
+                flash('All fields are required!', 'error')
+                return render_template('student_register.html')
+            
+            if not validate_gmrit_email(email):
+                flash('Invalid email format! Must be XX34XA12XX@gmrit.edu.in (where X is a digit)', 'error')
+                return render_template('student_register.html')
+            
+            if not validate_student_number(student_number):
+                flash('Invalid student number format! Must be XX34XA12XX (where X is a digit)', 'error')
+                return render_template('student_register.html')
+            
+            if password != confirm_password:
+                flash('Passwords do not match!', 'error')
+                return render_template('student_register.html')
+            
+            if len(password) < 8:
+                flash('Password must be at least 8 characters long!', 'error')
+                return render_template('student_register.html')
+            
+            # Check if email already exists
+            response = supabase.table('studentdetails').select('*').eq('email', email).execute()
+            if response.data:
+                flash('Email already registered! Please login.', 'error')
+                return render_template('student_register.html')
+            
+            # Check if student number already exists
+            response = supabase.table('studentdetails').select('*').eq('student_number', student_number).execute()
+            if response.data:
+                flash('Student number already registered!', 'error')
+                return render_template('student_register.html')
+            
+            # Hash password
+            password_hash = generate_password_hash(password)
+            
+            # Insert into database
+            data = {
+                'email': email,
+                'password_hash': password_hash,
+                'full_name': full_name,
+                'student_number': student_number,
+                'is_verified': False
+            }
+            
+            response = supabase.table('studentdetails').insert(data).execute()
+            
+            if response.data:
+                flash('Registration successful! Please login.', 'success')
+                return redirect(url_for('student_login'))
+            else:
+                flash('Registration failed! Please try again.', 'error')
+                return render_template('student_register.html')
+            
+        except Exception as e:
+            print(f"Registration error: {str(e)}")
+            flash('An error occurred during registration. Please try again.', 'error')
+            return render_template('student_register.html')
+    
+    return render_template('student_register.html')
+
+@app.route('/student/login', methods=['GET', 'POST'])
+def student_login():
+    """Student login page"""
+    if request.method == 'POST':
+        try:
+            email = request.form.get('email', '').strip().lower()
+            password = request.form.get('password', '')
+            
+            if not email or not password:
+                flash('Email and password are required!', 'error')
+                return render_template('student_login.html')
+            
+            if not validate_gmrit_email(email):
+                flash('Invalid email format!', 'error')
+                return render_template('student_login.html')
+            
+            # Get student from database
+            response = supabase.table('studentdetails').select('*').eq('email', email).execute()
+            
+            if not response.data:
+                flash('Invalid email or password!', 'error')
+                return render_template('student_login.html')
+            
+            student = response.data[0]
+            
+            # Verify password
+            if not check_password_hash(student['password_hash'], password):
+                flash('Invalid email or password!', 'error')
+                return render_template('student_login.html')
+            
+            # Set session
+            session['student_id'] = str(student['id'])
+            session['student_email'] = student['email']
+            session['student_name'] = student['full_name']
+            
+            flash(f'Welcome back, {student["full_name"]}!', 'success')
+            return redirect(url_for('student_dashboard'))
+            
+        except Exception as e:
+            print(f"Login error: {str(e)}")
+            flash('An error occurred during login. Please try again.', 'error')
+            return render_template('student_login.html')
+    
+    return render_template('student_login.html')
+
+@app.route('/student/dashboard')
+def student_dashboard():
+    """Student dashboard page"""
+    if 'student_id' not in session:
+        flash('Please login to access the dashboard.', 'error')
+        return redirect(url_for('student_login'))
+    
+    try:
+        # Get student details
+        response = supabase.table('studentdetails').select('*').eq('id', session['student_id']).execute()
+        
+        if not response.data:
+            session.clear()
+            flash('Student not found. Please login again.', 'error')
+            return redirect(url_for('student_login'))
+        
+        student = response.data[0]
+        return render_template('student_dashboard.html', student=student)
+        
+    except Exception as e:
+        print(f"Dashboard error: {str(e)}")
+        flash('An error occurred. Please try again.', 'error')
+        return redirect(url_for('student_login'))
+
+@app.route('/student/logout')
+def student_logout():
+    """Student logout"""
+    session.pop('student_id', None)
+    session.pop('student_email', None)
+    session.pop('student_name', None)
+    flash('You have been logged out successfully.', 'success')
+    return redirect(url_for('student_login'))
+
+@app.route('/student/forgot-password', methods=['GET', 'POST'])
+def student_forgot_password():
+    """Forgot password - send OTP"""
+    if request.method == 'POST':
+        try:
+            email = request.form.get('email', '').strip().lower()
+            
+            if not email:
+                flash('Email is required!', 'error')
+                return render_template('student_forgot_password.html')
+            
+            if not validate_gmrit_email(email):
+                flash('Invalid email format!', 'error')
+                return render_template('student_forgot_password.html')
+            
+            # Check if email exists
+            response = supabase.table('studentdetails').select('*').eq('email', email).execute()
+            
+            if not response.data:
+                flash('Email not found! Please register first.', 'error')
+                return render_template('student_forgot_password.html')
+            
+            # Generate OTP
+            otp = generate_otp()
+            otp_expiry = (datetime.now() + timedelta(minutes=10)).isoformat()
+            
+            # Update OTP in database
+            update_data = {
+                'otp_code': otp,
+                'otp_expiry': otp_expiry
+            }
+            
+            supabase.table('studentdetails').update(update_data).eq('email', email).execute()
+            
+            # Send OTP email
+            if send_otp_email(email, otp):
+                flash('OTP has been sent to your email. Please check your inbox.', 'success')
+                return redirect(url_for('student_reset_password', email=email))
+            else:
+                flash('Failed to send OTP. Please try again later.', 'error')
+                return render_template('student_forgot_password.html')
+            
+        except Exception as e:
+            print(f"Forgot password error: {str(e)}")
+            flash('An error occurred. Please try again.', 'error')
+            return render_template('student_forgot_password.html')
+    
+    return render_template('student_forgot_password.html')
+
+@app.route('/student/reset-password', methods=['GET', 'POST'])
+def student_reset_password():
+    """Reset password with OTP"""
+    email = request.args.get('email', '').strip().lower()
+    
+    if not email or not validate_gmrit_email(email):
+        flash('Invalid email!', 'error')
+        return redirect(url_for('student_forgot_password'))
+    
+    if request.method == 'POST':
+        try:
+            otp = request.form.get('otp', '').strip()
+            new_password = request.form.get('new_password', '')
+            confirm_password = request.form.get('confirm_password', '')
+            
+            if not all([otp, new_password, confirm_password]):
+                flash('All fields are required!', 'error')
+                return render_template('student_reset_password.html', email=email)
+            
+            if new_password != confirm_password:
+                flash('Passwords do not match!', 'error')
+                return render_template('student_reset_password.html', email=email)
+            
+            if len(new_password) < 8:
+                flash('Password must be at least 8 characters long!', 'error')
+                return render_template('student_reset_password.html', email=email)
+            
+            # Get student details
+            response = supabase.table('studentdetails').select('*').eq('email', email).execute()
+            
+            if not response.data:
+                flash('Student not found!', 'error')
+                return redirect(url_for('student_forgot_password'))
+            
+            student = response.data[0]
+            
+            # Verify OTP
+            if not student.get('otp_code') or student['otp_code'] != otp:
+                flash('Invalid OTP!', 'error')
+                return render_template('student_reset_password.html', email=email)
+            
+            # Check OTP expiry
+            if student.get('otp_expiry'):
+                otp_expiry_str = student['otp_expiry']
+                # Remove timezone info for simple comparison (stored as naive datetime)
+                # Extract just the datetime part before any timezone offset
+                if '+' in otp_expiry_str:
+                    otp_expiry_str = otp_expiry_str.split('+')[0]
+                if 'Z' in otp_expiry_str:
+                    otp_expiry_str = otp_expiry_str.replace('Z', '')
+                
+                otp_expiry = datetime.fromisoformat(otp_expiry_str)
+                current_time = datetime.now()
+                
+                if current_time > otp_expiry:
+                    flash('OTP has expired! Please request a new one.', 'error')
+                    return redirect(url_for('student_forgot_password'))
+            
+            # Hash new password
+            password_hash = generate_password_hash(new_password)
+            
+            # Update password and clear OTP
+            update_data = {
+                'password_hash': password_hash,
+                'otp_code': None,
+                'otp_expiry': None
+            }
+            
+            supabase.table('studentdetails').update(update_data).eq('email', email).execute()
+            
+            flash('Password reset successful! Please login with your new password.', 'success')
+            return redirect(url_for('student_login'))
+            
+        except Exception as e:
+            print(f"Reset password error: {str(e)}")
+            flash('An error occurred. Please try again.', 'error')
+            return render_template('student_reset_password.html', email=email)
+    
+    return render_template('student_reset_password.html', email=email)
+
+# ============================================
+# END OF STUDENT AUTHENTICATION ROUTES
+# ============================================
+
 # For Vercel deployment
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true')
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true')
