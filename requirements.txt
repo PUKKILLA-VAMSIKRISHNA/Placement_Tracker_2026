@@ -1,0 +1,11 @@
+Flask
+supabase>=2.0.0
+python-dotenv
+Werkzeug
+pandas
+xlsxwriter
+reportlab
+openpyxl
+Pillow
+werkzeug
+flask-mail

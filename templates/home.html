@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Home - IT Branch 2026 Placements{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">Welcome to IT Branch Placement Tracker</h1>
+            <p class="lead mb-4">Track and manage placement opportunities for IT Branch 2026 students. Access company details, student records, and placement statistics all in one place.</p>
+            <div class="d-flex gap-3">
+                <a href="{{ url_for('student_login') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-person-circle"></i> Student Login
+                </a>
+                <a href="{{ url_for('admin_login') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-shield-lock"></i> Admin Login
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6 text-center">
+            <i class="bi bi-building" style="font-size: 200px; color: #0d6efd;"></i>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-5">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-building-fill" style="font-size: 48px; color: #0d6efd;"></i>
+                    </div>
+                    <h5 class="card-title">Company Listings</h5>
+                    <p class="card-text text-muted">Browse placement companies and their job opportunities for IT students.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-people-fill" style="font-size: 48px; color: #198754;"></i>
+                    </div>
+                    <h5 class="card-title">Student Portal</h5>
+                    <p class="card-text text-muted">Register, login, and manage your placement profile and applications.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-graph-up-arrow" style="font-size: 48px; color: #dc3545;"></i>
+                    </div>
+                    <h5 class="card-title">Placement Statistics</h5>
+                    <p class="card-text text-muted">View detailed analytics and reports on placement activities.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5 mb-5">
+        <div class="col-12 text-center">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body p-5">
+                    <h2 class="mb-3">Get Started Today</h2>
+                    <p class="lead mb-4">New student? Register now to access placement opportunities.</p>
+                    <a href="{{ url_for('student_register') }}" class="btn btn-light btn-lg">
+                        <i class="bi bi-person-plus"></i> Register as Student
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.display-4 {
+    color: #212529;
+}
+
+.lead {
+    color: #6c757d;
+}
+</style>
+{% endblock %}

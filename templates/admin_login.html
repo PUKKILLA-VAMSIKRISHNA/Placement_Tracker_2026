@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - IT Branch 2026 Placements{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-11 col-sm-8 col-md-6 col-lg-4">
+        <div class="card shadow mobile-login-card">
+            <div class="card-header bg-primary text-white text-center">
+                <h5 class="h4 mb-0">
+                    <i class="fas fa-user-shield me-2"></i>
+                    <span class="d-none d-sm-inline">Admin Login</span>
+                    <span class="d-sm-none">Login</span>
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('admin_authenticate') }}">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-2"></i>
+                            Email Address
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               placeholder="Enter admin email" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-2"></i>
+                            Password
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Enter password" required>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Login
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center text-muted">
+                <small>
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Secure admin access only
+                </small>
+            </div>
+        </div>
+        
+        <!-- Back to Home -->
+        <div class="text-center mt-3">
+            <a href="{{ url_for('index') }}" class="text-decoration-none">
+                <i class="fas fa-arrow-left me-2"></i>
+                <span class="d-none d-sm-inline">Back to Companies</span>
+                <span class="d-sm-none">Back</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Demo Credentials Info (Remove in production) -->
+<div class="row justify-content-center mt-4">
+    <div class="col-11 col-sm-8 col-md-6 col-lg-4">
+        <div class="alert alert-info mobile-alert">
+            <h6><i class="fas fa-info-circle me-2"></i>Demo Credentials</h6>
+            <p class="mb-1"><strong>Email:</strong> admin@placement.com</p>
+            <p class="mb-0"><strong>Password:</strong> admin123</p>
+            <small class="text-muted">Change these credentials in production!</small>
+        </div>
+    </div>
+</div>
+
+<style>
+    .mobile-login-card {
+        border-radius: 15px;
+        border: none;
+    }
+    
+    .mobile-alert {
+        border-radius: 12px;
+    }
+    
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 1.5rem !important;
+        }
+        
+        .form-control {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+        
+        .mobile-alert {
+            font-size: 0.9rem;
+        }
+        
+        .mobile-alert h6 {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}

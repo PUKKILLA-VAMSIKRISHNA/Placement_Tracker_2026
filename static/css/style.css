@@ -1,0 +1,241 @@
+/* Custom CSS for Placement Tracker */
+
+:root {
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+    --dark-color: #212529;
+    --light-color: #f8f9fa;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Company Cards */
+.company-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: none;
+    border-radius: 10px;
+}
+
+.company-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.company-card .card-header {
+    border-radius: 10px 10px 0 0 !important;
+    border-bottom: none;
+}
+
+.company-card .card-footer {
+    border-radius: 0 0 10px 10px !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Avatar Circle */
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Statistics */
+.stat-item {
+    padding: 1rem;
+}
+
+.stat-item h3 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+/* Custom Buttons */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Form Styling */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Table Styling */
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5em 0.75em;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .display-5 {
+        font-size: 1.75rem;
+    }
+    
+    .company-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Loading Animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Custom Alert Styling */
+.alert {
+    border: none;
+    border-radius: 10px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    border-left-color: var(--success-color);
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.alert-danger {
+    border-left-color: var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.alert-info {
+    border-left-color: var(--info-color);
+    background-color: rgba(13, 202, 240, 0.1);
+}
+
+.alert-warning {
+    border-left-color: var(--warning-color);
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Modal Styling */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 0 0 12px 12px;
+}
+
+/* Utility Classes */
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-custom {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Print Styles */
+@media print {
+    .navbar, .btn, .modal, footer {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+}
